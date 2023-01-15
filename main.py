@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 def v_km_h(vms):
     return vms*3.6
 
-"""SIŁY"""
 def sila_tarcia(fi, m, g, alpha):
     return fi*m*g*math.cos(alpha)
 
@@ -55,7 +54,7 @@ class Samochod:
         
         wynik = self.f_przyspieszania - f_oporu - self.f_hamowania
 
-        if False:
+        if True:
             print(f"f_oporu_powietrza: {f_oporu_powietrza}")
             print(f"f_tarcia: {f_tarcia}")
             print(f"f_zsuwania: {f_zsuwania}")
@@ -69,7 +68,7 @@ class Samochod:
         return self.f_dzialajaca_na_pojazd/self.m
 
     def log(self):
-        print(f"v: {v_km_h(self.v_value)} ; s: {self.s} ; a: {self.a}")
+        print(f"v: {self.v} ; s: {self.s} ; a: {self.a} p: {self.f_przyspieszania} ; h: {self.f_hamowania}")
 
 def generate_charts(sm1, sm2, memory_delta):
     plt.subplot(3, 5, 1, title="1: v")
@@ -110,7 +109,7 @@ class SamMemory:
 
     def save(self, sam, t):
         self.t.append(t)
-        self.v.append(sam.v_value)
+        self.v.append(sam.v)
         self.s.append(sam.s)
         self.a.append(sam.a)
         self.przys.append(sam.f_przyspieszania)
@@ -126,16 +125,19 @@ class Regulator:
         self.memory_2 = SamMemory()
         self.memory_delta = []
 
+        self.warnings = 0
+
     def delta_s(self):
         return self.sam_1.s - self.sam_2.s
 
     def log(self, t):
         print(f"iteracja: {t}")
         print(f"delta_s: {self.delta_s()}")
+        print("sam1:")
         self.sam_1.log()
+        print("sam2:")
         self.sam_2.log()
 
-    
 
     @staticmethod
     def get_new_f_przyspieszenia(sam, t):
@@ -151,19 +153,29 @@ class Regulator:
 
     def step(self, t):
         # sam 1:
-        if self.sam_1.allow_simulate:
-            self.sam_1.f_przyspieszania = self.get_new_f_przyspieszenia(
-                self.sam_1,
-                t
-            )
-            self.sam_1.a += self.sam_1.delta_a
-        self.sam_1.v = v(self.sam_1.v_zero, self.sam_1.a, t)
-        self.sam_1.s = s(self.sam_1.s_zero, self.sam_1.v_zero, t, self.sam_1.a)
+        # if self.sam_1.allow_simulate:
+        #     self.sam_1.f_przyspieszania = self.get_new_f_przyspieszenia(
+        #         self.sam_1,
+        #         t
+        #     )
+        self.sam_1.a = self.sam_1.delta_a
+        self.sam_1.v = v(self.sam_1.v_zero, self.sam_1.a, 1)
+
+        if self.sam_1.v < 0:
+            self.sam_1.v = 0
+
+        self.sam_1.s = s(self.sam_1.s_zero, self.sam_1.v_zero, 1, self.sam_1.a)
+        self.sam_1.v_zero = self.sam_1.v
 
         # sam_2
-        self.sam_2.a += self.sam_2.delta_a
-        self.sam_2.v = v(self.sam_2.v_zero, self.sam_2.a, t)
-        self.sam_2.s = s(self.sam_2.s_zero, self.sam_2.v_zero, t, self.sam_2.a)
+        self.sam_2.a = self.sam_2.delta_a
+        self.sam_2.v = v(self.sam_2.v_zero, self.sam_2.a, 1)
+
+        if self.sam_2.v < 0:
+            self.sam_2.v = 0
+
+        self.sam_2.s = s(self.sam_2.s_zero, self.sam_2.v_zero, 1, self.sam_2.a)
+        self.sam_2.v_zero = self.sam_2.v
         self.memory_1.save(self.sam_1, t)
         self.memory_2.save(self.sam_2, t)
         #input("123")
@@ -173,6 +185,18 @@ class Regulator:
 
         # delta
         self.memory_delta.append(ds)
+
+        #if ds > 100:
+        #    print("przyspieszanie=======================================")
+        #    self.sam_2.f_przyspieszania = 8500
+        #    self.sam_2.f_hamowania = 0
+        #elif ds < 100:
+        #    print("hamowanie===========================================")
+        #    self.sam_2.f_przyspieszania = 0
+        #    self.sam_2.f_hamowania = 0
+        #if self.sam_2.a < 0:
+        #    self.sam_2.a = 0
+        #    stop = input("123")
 
         # estimations
         # if ds > 100:
@@ -204,22 +228,22 @@ def main():
     fi1 = 0.8 # -współczynnik tarcia
     alpha1 = 0 # math.pi / 6 # -kąt nachylenia równi
     A1 = 4.0 # -powierzchnia czołowa pojazdu
-    v1 = 27
-    s1 = 110
+    v1 = 27.0
+    s1 = 110.0
 
     m2 = 1000.0 # -masa pojazdu
     fi2 = 0.8 # -współczynnik tarcia
     alpha2= 0 # math.pi / 6 # -kąt nachylenia równi
     A2 = 4.0 # -powierzchnia czołowa pojazdu
-    v2 = 31
-    s2 = 0
+    v2 = 29.0
+    s2 = 0.0
 
     sam_1 = Samochod(m1, fi1, alpha1, A1, s1, v1)
     sam_2 = Samochod(m2, fi2, alpha2, A2, s2, v2)
     r = Regulator(sam_1=sam_1, sam_2=sam_2)
 
     events = {
-        95: {"h": 0, "p": 0},
+        # 95: {"h": 0, "p": 0},
         #120: {"h": 5000, "p": 0},
         #125: {"h": 0, "p": 8500},
         #200: {"h": 10000, "p": 0},
@@ -229,7 +253,7 @@ def main():
 
     duration = 600
     for t in range(duration):
-        # input("0")
+        # input("-")
         r.step(t=t)
         r.log(t=t)
 
@@ -242,6 +266,7 @@ def main():
 
 
     generate_charts(r.memory_1, r.memory_2, r.memory_delta)
+    print(r.memory_delta)
 
 if __name__ == "__main__":
     main()
