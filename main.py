@@ -53,8 +53,7 @@ class Samochod:
         f_oporu_powietrza = sila_oporu_powietrza(self.c, self.A, self.g_powietrza, self.v_value)
         f_tarcia = sila_tarcia(self.fi, self.m, self.g, self.alpha)
         f_zsuwania = sila_zsuwania(self.m, self.g, self.alpha)
-        f_oporu = f_oporu_powietrza + f_tarcia + f_zsuwania
-        
+        f_oporu = f_oporu_powietrza + f_tarcia + f_zsuwania        
         wynik = self.f_przyspieszania - f_oporu - self.f_hamowania
 
         if False:
@@ -177,7 +176,7 @@ class Regulator:
 
         elif current_ds > 150:
             self.sam_2.f_hamowania = 0
-            self.sam_2.f_przyspieszania = 8500
+            self.sam_2.f_przyspieszania = 8338.9815
             # if len(self.memory_delta) > 1:
             #     if self.memory_delta[-1] > self.memory_delta[-2]:
             #         if v(self.sam_2.v_zero, self.sam_2.a, 1) < 35:
@@ -186,7 +185,7 @@ class Regulator:
         else:
             self.sam_2.last_multiplier = 1.5
             self.sam_2.brake_last_multiplier = 1.5
-            self.sam_2.f_przyspieszania = 8500
+            self.sam_2.f_przyspieszania = 8338.9815
             self.sam_2.f_hamowania = 0
 
         self.sam_1.v = v(self.sam_1.v_zero, self.sam_1.a, 1)
@@ -228,7 +227,7 @@ def main():
     A1 = 4.0 # -powierzchnia czołowa pojazdu
     v1 = 27.0
     s1 = 110.0
-    f_1_przyspieszania = 8500
+    f_1_przyspieszania = 8338.9815
 
     m2 = 1000.0 # -masa pojazdu
     fi2 = 0.8 # -współczynnik tarcia
@@ -236,7 +235,7 @@ def main():
     A2 = 2 # -powierzchnia czołowa pojazdu
     v2 = 29.0
     s2 = 0.0
-    f_2_przyspieszania = 8500
+    f_2_przyspieszania = 8338.9815
 
     sam_1 = Samochod(m1, fi1, alpha1, A1, s1, v1, f_1_przyspieszania)
     sam_2 = Samochod(m2, fi2, alpha2, A2, s2, v2, f_2_przyspieszania)
@@ -249,45 +248,37 @@ def main():
         21: {"h": 0, "p": 8900},
         29: {"h": 0, "p": 6000},
         32: {"h": 0, "p": 7500},
-        33: {"h": 0, "p": 8000},
-        41: {"h": 0, "p": 5500},
-        43: {"h": 0, "p": 8500},
-        54: {"h": 0, "p": 7500},
-        55: {"h": 0, "p": 8500},
-        112: {"h": 0, "p": 7000},
-        113: {"h": 0, "p": 8900},
-        135: {"h": 0, "p": 6000},
-        137: {"h": 0, "p": 8900},
+        33: {"h": 0, "p": 8338.9815},
     }
     duration_1 = 140
 
     events_2 = {
         7: {"h": 0, "p": 6000},
-        8: {"h": 0, "p": 8900},
+        8: {"h": 0, "p": 8338.9815},
         20: {"h": 0, "p": 6000},
-        21: {"h": 0, "p": 8900},
+        21: {"h": 0, "p": 8338.9815},
         30: {"h": 0, "p": 6000},
     }
     duration_2 = 45
 
     events_3 = {
         7: {"h": 0, "p": 6000},
-        8: {"h": 0, "p": 8900},
+        8: {"h": 0, "p": 8338.9815},
         20: {"h": 0, "p": 6000},
-        21: {"h": 0, "p": 8900},
+        21: {"h": 0, "p": 8338.9815},
         29: {"h": 0, "p": 6000},
         32: {"h": 0, "p": 7500},
-        34: {"h": 0, "p": 8500},
+        34: {"h": 0, "p": 8338.9815},
         41: {"h": 0, "p": 7100},
-        55: {"h": 0, "p": 8500},
+        55: {"h": 0, "p": 8338.9815},
         81: {"h": 0, "p": 6000},
-        89: {"h": 0, "p": 8500},
+        89: {"h": 0, "p": 8338.9815},
         100: {"h": 0, "p": 6000},
-        105: {"h": 0, "p": 8900},
+        105: {"h": 0, "p": 8338.9815},
         112: {"h": 0, "p": 6000},
-        120: {"h": 0, "p": 8500},
+        120: {"h": 0, "p": 8338.9815},
         135: {"h": 0, "p": 6000},
-        137: {"h": 0, "p": 8900},
+        137: {"h": 0, "p": 8338.9815},
     }
     duration_3 = 140
 
