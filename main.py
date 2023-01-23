@@ -22,7 +22,7 @@ def s(s_zero, v_zero, t, a):
 
 
 class Samochod:
-    def __init__(self, m, fi, alpha, A, s, v_value) -> None:
+    def __init__(self, m, fi, alpha, A, s, v_value, f_przyspieszania) -> None:
         # static vars
         self.g = 9.81
         self.c = 0.3
@@ -41,9 +41,12 @@ class Samochod:
         self.s_zero = s
 
         self.f_hamowania = 0
-        self.f_przyspieszania = 8500
+        self.f_przyspieszania = f_przyspieszania
 
         self.allow_simulate = True
+
+        self.last_multiplier = 1.5
+        self.brake_last_multiplier = 1.5
 
     @property
     def f_dzialajaca_na_pojazd(self):
@@ -54,13 +57,15 @@ class Samochod:
         
         wynik = self.f_przyspieszania - f_oporu - self.f_hamowania
 
-        if True:
+        if False:
             print(f"f_oporu_powietrza: {f_oporu_powietrza}")
             print(f"f_tarcia: {f_tarcia}")
             print(f"f_zsuwania: {f_zsuwania}")
             print(f"przyspieszanie: {self.f_przyspieszania}")
             print(f"hamowanie: {self.f_hamowania}")
             print(f"f_dzialajaca_na_pojazd {wynik}")
+
+        print(f"======================================================================= {wynik}")
         return wynik
 
     @property
@@ -131,7 +136,7 @@ class Regulator:
         return self.sam_1.s - self.sam_2.s
 
     def log(self, t):
-        print(f"iteracja: {t}")
+        print(f"-------------------------------------------------------------------------------------------------------------iteracja: {t}")
         print(f"delta_s: {self.delta_s()}")
         print("sam1:")
         self.sam_1.log()
@@ -140,87 +145,110 @@ class Regulator:
 
 
     @staticmethod
-    def get_new_f_przyspieszenia(sam, t):
+    def get_new_f_przyspieszenia(sam, vmax=145):
+        print("///////////////////////////////////////////////////////////////////////////////////////////////")
         start_a = sam.a
-        sam.v_value = v(sam.v_zero, sam.a, t)
-        while v_km_h(sam.v_value) > 145:
+        sam.v_value = v(sam.v_zero, sam.a, 1)
+        while v_km_h(sam.v_value) > vmax:
             sam.f_przyspieszania = sam.f_przyspieszania/2
             sam.a = start_a + sam.delta_a
-            sam.v_value = v(sam.v_zero, sam.a, t)
+            sam.v_value = v(sam.v_zero, sam.a, 1)
             stop = input("++")
 
         return sam.f_przyspieszania
 
     def step(self, t):
         # sam 1:
-        # if self.sam_1.allow_simulate:
-        #     self.sam_1.f_przyspieszania = self.get_new_f_przyspieszenia(
-        #         self.sam_1,
-        #         t
-        #     )
-        self.sam_1.a = self.sam_1.delta_a
+        if self.sam_1.allow_simulate:
+            self.sam_1.f_przyspieszania = self.get_new_f_przyspieszenia(
+                self.sam_1,
+            )
         self.sam_1.v = v(self.sam_1.v_zero, self.sam_1.a, 1)
 
         if self.sam_1.v < 0:
+            # stop = input("Dziwna sprawa 1")
             self.sam_1.v = 0
+            self.sam_1.a = 0
+        else:
+            self.sam_1.a = self.sam_1.delta_a
 
         self.sam_1.s = s(self.sam_1.s_zero, self.sam_1.v_zero, 1, self.sam_1.a)
         self.sam_1.v_zero = self.sam_1.v
+        self.sam_1.s_zero = self.sam_1.s
+        self.sam_1.a = self.sam_1.delta_a
 
-        # sam_2
-        self.sam_2.a = self.sam_2.delta_a
+
+        #input("123")
+        print(f"fake delta  {self.delta_s()}")
+        self.memory_delta.append(self.delta_s())
+
+        current_ds = self.delta_s()
+
         self.sam_2.v = v(self.sam_2.v_zero, self.sam_2.a, 1)
-
         if self.sam_2.v < 0:
+            # stop = input("Dziwna sprawa 2")
             self.sam_2.v = 0
-
+            self.sam_2.a = 0
+        else:
+            self.sam_2.a = self.sam_2.delta_a
         self.sam_2.s = s(self.sam_2.s_zero, self.sam_2.v_zero, 1, self.sam_2.a)
         self.sam_2.v_zero = self.sam_2.v
+        self.sam_2.s_zero = self.sam_2.s
+
+        # delta and memory
         self.memory_1.save(self.sam_1, t)
         self.memory_2.save(self.sam_2, t)
-        #input("123")
-        print(f"delta  {self.delta_s()}")
 
-        ds = self.delta_s()
-
-        # delta
-        self.memory_delta.append(ds)
-
-        #if ds > 100:
-        #    print("przyspieszanie=======================================")
-        #    self.sam_2.f_przyspieszania = 8500
-        #    self.sam_2.f_hamowania = 0
-        #elif ds < 100:
-        #    print("hamowanie===========================================")
-        #    self.sam_2.f_przyspieszania = 0
-        #    self.sam_2.f_hamowania = 0
-        #if self.sam_2.a < 0:
-        #    self.sam_2.a = 0
-        #    stop = input("123")
+        # stop = input(t)
+        multiplier = 1
+        if current_ds < 0:
+            input(f"ZDERZENIE {t}")
 
         # estimations
-        # if ds > 100:
-        #     print("przyspieszanie=======================================")
-        #     if len(self.memory_delta) > 1:
-        #         if ds < self.memory_delta[-2]:
-        #             self.sam_2.f_przyspieszania *= 2
-        #         else:
-        #             self.sam_2.f_przyspieszania = 8500
-        #     else:
-        #         self.sam_2.f_przyspieszania = 8500
-        #     self.sam_2.f_hamowania = 0
-        # elif ds < 100:
-        #     print("hamowanie===========================================")
-        #     self.sam_2.f_przyspieszania = 0
-        #     self.sam_2.f_hamowania = 8500
-        # ## stop checker
-        # # safety
-        # if self.sam_2.a + self.sam_2.delta_a < 0:
-        #     self.sam_2.f_hamowania = 0
-        #     self.sam_2.f_przyspieszania += 100
-        # while self.sam_1.a + self.sam_1.delta_a < 0:
-        #     self.sam_1.f_hamowania = 0
-        #     self.sam_1.f_przyspieszania += 100
+        if current_ds < 90:
+            print("Hamowanie11111111111111111111111111111111111111111111111111111111111111")
+            # stop = input("hamowanko")
+            self.sam_2.f_hamowania = 2500
+            if len(self.memory_delta) > 1:
+                if self.memory_delta[-1] < self.memory_delta[-2]:
+                    if self.memory_delta[-1] < 75:
+                        multiplier = 1.5
+                        self.sam_2.f_hamowania += 3500
+                    if self.memory_delta[-1] < 50:
+                        multiplier = 2.25
+                        self.sam_2.f_hamowania += 5000
+                    if self.memory_delta[-1] < 10:
+                        multiplier = 2.75
+                        self.sam_2.f_hamowania += 10000
+                    
+                    self.sam_2.brake_last_multiplier *= multiplier
+                else:
+
+                    self.sam_2.brake_last_multiplier = 1
+
+                # self.sam_2.f_hamowania *= self.sam_2.brake_last_multiplier
+                # input(self.sam_2.f_hamowania)
+                # self.sam_2.f_hamowania = 450
+
+        elif current_ds > 150:
+            print("Przyspieszanie000000000000000000000000000000000000000000000000000")
+            self.sam_2.f_hamowania = 0
+            if len(self.memory_delta) > 1:
+                if self.memory_delta[-1] > self.memory_delta[-2]:
+                    self.sam_2.f_przyspieszania *= 1.1
+                    floor = self.get_new_f_przyspieszenia(
+                        self.sam_2,
+                        vmax=140
+                    )
+                    print(floor)
+                    print(self.sam_2.f_przyspieszania)
+                    # stop = input("RAAA")
+                    self.sam_2.f_przyspieszania = min(self.sam_2.f_przyspieszania, floor)
+        else:
+            self.sam_2.last_multiplier = 1.5
+            self.sam_2.brake_last_multiplier = 1.5
+            self.sam_2.f_przyspieszania = 8500
+            self.sam_2.f_hamowania = 0
 
 
 def main():
@@ -230,40 +258,83 @@ def main():
     A1 = 4.0 # -powierzchnia czołowa pojazdu
     v1 = 27.0
     s1 = 110.0
+    f_1_przyspieszania = 8500
 
     m2 = 1000.0 # -masa pojazdu
     fi2 = 0.8 # -współczynnik tarcia
     alpha2= 0 # math.pi / 6 # -kąt nachylenia równi
-    A2 = 4.0 # -powierzchnia czołowa pojazdu
+    A2 = 2 # -powierzchnia czołowa pojazdu
     v2 = 29.0
     s2 = 0.0
+    f_2_przyspieszania = 8500
 
-    sam_1 = Samochod(m1, fi1, alpha1, A1, s1, v1)
-    sam_2 = Samochod(m2, fi2, alpha2, A2, s2, v2)
+    sam_1 = Samochod(m1, fi1, alpha1, A1, s1, v1, f_1_przyspieszania)
+    sam_2 = Samochod(m2, fi2, alpha2, A2, s2, v2, f_2_przyspieszania)
     r = Regulator(sam_1=sam_1, sam_2=sam_2)
 
-    events = {
-        # 95: {"h": 0, "p": 0},
-        #120: {"h": 5000, "p": 0},
-        #125: {"h": 0, "p": 8500},
-        #200: {"h": 10000, "p": 0},
-        #205: {"h": 0, "p": 8500},
+    events_1 = {
+        7: {"h": 0, "p": 6000},
+        8: {"h": 0, "p": 8900},
+        20: {"h": 0, "p": 6000},
+        21: {"h": 0, "p": 8900},
+        29: {"h": 0, "p": 6000},
+        32: {"h": 0, "p": 7500},
+        33: {"h": 0, "p": 8000},
+        41: {"h": 0, "p": 5500},
+        43: {"h": 0, "p": 8500},
+        54: {"h": 0, "p": 7500},
+        55: {"h": 0, "p": 8500},
+        81: {"h": 0, "p": 6000},
+        89: {"h": 0, "p": 8500},
+        100: {"h": 0, "p": 6000},
+        105: {"h": 0, "p": 8900},
+        112: {"h": 0, "p": 6000},
+        115: {"h": 0, "p": 7000},
+        120: {"h": 0, "p": 8900},
+        135: {"h": 0, "p": 6000},
+        137: {"h": 0, "p": 8900},
     }
-    simulation_switch_events = [95]
+    duration_1 = 140
 
-    duration = 600
+    events_2 = {
+        7: {"h": 0, "p": 6000},
+        8: {"h": 0, "p": 8900},
+        20: {"h": 0, "p": 6000},
+        21: {"h": 0, "p": 8900},
+        30: {"h": 0, "p": 6000},
+    }
+    duration_2 = 45
+
+    events_3 = {
+        7: {"h": 0, "p": 6000},
+        8: {"h": 0, "p": 8900},
+        20: {"h": 0, "p": 6000},
+        21: {"h": 0, "p": 8900},
+        29: {"h": 0, "p": 6000},
+        32: {"h": 0, "p": 7500},
+        34: {"h": 0, "p": 8500},
+        41: {"h": 0, "p": 7100},
+        55: {"h": 0, "p": 8500},
+        81: {"h": 0, "p": 6000},
+        89: {"h": 0, "p": 8500},
+        100: {"h": 0, "p": 6000},
+        105: {"h": 0, "p": 8900},
+        112: {"h": 0, "p": 6000},
+        120: {"h": 0, "p": 8500},
+        135: {"h": 0, "p": 6000},
+        137: {"h": 0, "p": 8900},
+    }
+    duration_3 = 140
+
+    events = events_1
+    duration = duration_1
     for t in range(duration):
-        # input("-")
         r.step(t=t)
         r.log(t=t)
-
+        #stop = input(t)
         if t in events.keys():
             r.sam_1.f_hamowania = events[t]["h"]
             r.sam_1.f_przyspieszania = events[t]["p"]
-        if t in simulation_switch_events:
-            r.sam_1.allow_simulate = False
-
-
 
     generate_charts(r.memory_1, r.memory_2, r.memory_delta)
     print(r.memory_delta)
