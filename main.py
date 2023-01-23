@@ -158,11 +158,37 @@ class Regulator:
         return sam.f_przyspieszania
 
     def step(self, t):
-        # sam 1:
-        # if self.sam_1.allow_simulate:
-        #     self.sam_1.f_przyspieszania = self.get_new_f_przyspieszenia(
-        #         self.sam_1,
-        #     )
+        # delta and memory
+        self.memory_delta.append(self.delta_s())
+        current_ds = self.delta_s()
+        if current_ds < 0:
+            input(f"ZDERZENIE {t}")
+
+        if current_ds < 90:
+            self.sam_2.f_przyspieszania = 0
+            if len(self.memory_delta) > 1:
+                if self.sam_2.f_hamowania == 0:
+                    self.sam_2.f_hamowania = 500
+                div_elem = self.memory_delta[-2]/(self.memory_delta[-1]**2)
+                self.sam_2.f_hamowania *= float(2.0 + abs(div_elem))
+                if self.memory_delta[-1] < 25:
+                    self.sam_2.f_hamowania += 10000
+
+
+        elif current_ds > 150:
+            self.sam_2.f_hamowania = 0
+            self.sam_2.f_przyspieszania = 8500
+            # if len(self.memory_delta) > 1:
+            #     if self.memory_delta[-1] > self.memory_delta[-2]:
+            #         if v(self.sam_2.v_zero, self.sam_2.a, 1) < 35:
+            #             self.sam_2.f_przyspieszania *= 1.1
+
+        else:
+            self.sam_2.last_multiplier = 1.5
+            self.sam_2.brake_last_multiplier = 1.5
+            self.sam_2.f_przyspieszania = 8500
+            self.sam_2.f_hamowania = 0
+
         self.sam_1.v = v(self.sam_1.v_zero, self.sam_1.a, 1)
 
         if self.sam_1.v < 0:
@@ -177,26 +203,11 @@ class Regulator:
         self.sam_1.s_zero = self.sam_1.s
         self.sam_1.a = self.sam_1.delta_a
 
-
-        #input("123")
-        print(f"fake delta  {self.delta_s()}")
-        self.memory_delta.append(self.delta_s())
-
-        current_ds = self.delta_s()
-
-        # if self.sam_2.v == 0:
-        #     self.sam_2.v_zero = 0
-
         self.sam_2.v = v(self.sam_2.v_zero, self.sam_2.a, 1)
 
         if self.sam_2.v < 0:
             self.sam_2.v = 0
             self.sam_2.a = 0
-
-        # safe
-        if s(self.sam_2.s_zero, self.sam_2.v_zero, 1, self.sam_2.a) < self.sam_2.s:
-            raise Exception([self.sam_2.a, abs(2*self.sam_2.v), self.sam_2.delta_a])
-            raise Exception([self.sam_2.s_zero, self.sam_2.v_zero, 1, self.sam_2.a, s(self.sam_2.s_zero, self.sam_2.v_zero, 1, self.sam_2.a)])
 
         self.sam_2.s = s(self.sam_2.s_zero, self.sam_2.v_zero, 1, self.sam_2.a)
         self.sam_2.v_zero = self.sam_2.v
@@ -206,83 +217,8 @@ class Regulator:
         if abs(self.sam_2.a) > 2*self.sam_2.v:
             self.sam_2.a = 2*self.sam_2.v
 
-        # delta and memory
         self.memory_1.save(self.sam_1, t)
         self.memory_2.save(self.sam_2, t)
-
-        # stop = input(t)
-        multiplier = 1
-        if current_ds < 0:
-            input(f"ZDERZENIE {t}")
-            # raise Exception("X")
-
-        # estimations
-        if current_ds < 90:
-            self.sam_2.f_przyspieszania = 0
-            print("Hamowanie11111111111111111111111111111111111111111111111111111111111111")
-            print(self.memory_delta[-1])
-            print(self.memory_delta[-2])
-            # stop = input("hamowanko")
-            if len(self.memory_delta) > 1:
-                if self.sam_2.f_hamowania == 0:
-                    self.sam_2.f_hamowania = 500
-                
-                div_elem = self.memory_delta[-2]/(self.memory_delta[-1]**2)
-                # input(div_elem)
-                self.sam_2.f_hamowania *= float(2.0 + abs(div_elem))
-                if self.memory_delta[-1] < 25:
-                    print("###################################################################################33 UWAGA")
-                    self.sam_2.f_hamowania += 10000
-
-                if self.sam_2.f_hamowania > 20000:
-                    self.sam_2.f_hamowania = 20000
-                # input(self.sam_2.f_hamowania)
-            # """======================================
-            # self.sam_2.f_hamowania = 2500
-            # if len(self.memory_delta) > 1:
-            #     if self.memory_delta[-1] < self.memory_delta[-2]:
-            #         if self.memory_delta[-1] < 75:
-            #             multiplier = 1.5
-            #             self.sam_2.f_hamowania += 5500
-            #         if self.memory_delta[-1] < 50:
-            #             multiplier = 2.25
-            #             self.sam_2.f_hamowania += 10000
-            #         if self.memory_delta[-1] < 10:
-            #             multiplier = 2.75
-            #             self.sam_2.f_hamowania += 10000
-                    
-            #         self.sam_2.brake_last_multiplier *= multiplier
-            #     else:
-
-            #         self.sam_2.brake_last_multiplier = 1
-
-            #     # self.sam_2.f_hamowania *= self.sam_2.brake_last_multiplier
-            #     # input(self.sam_2.f_hamowania)
-            #     # self.sam_2.f_hamowania = 450"""
-
-        elif current_ds > 150:
-            print("Przyspieszanie000000000000000000000000000000000000000000000000000")
-            self.sam_2.f_hamowania = 0
-            self.sam_2.f_przyspieszania = 8500
-            # if len(self.memory_delta) > 1:
-            #     if self.memory_delta[-1] > self.memory_delta[-2]:
-            #         if v(self.sam_2.v_zero, self.sam_2.a, 1) < 35:
-            #             self.sam_2.f_przyspieszania *= 1.1
-                    # floor = self.get_new_f_przyspieszenia(
-                    #     self.sam_2,
-                    #     vmax=140
-                    # )
-                    # print(floor)
-                    # print(self.sam_2.f_przyspieszania)
-                    # stop = input("RAAA")
-        else:
-            self.sam_2.last_multiplier = 1.5
-            self.sam_2.brake_last_multiplier = 1.5
-            self.sam_2.f_przyspieszania = 8500
-            self.sam_2.f_hamowania = 0
-
-        # if v(self.sam_2.v_zero, self.sam_2.a, 1) > 35:
-        #     self.sam_2.f_przyspieszania = 8500
 
 
 def main():
@@ -318,13 +254,8 @@ def main():
         43: {"h": 0, "p": 8500},
         54: {"h": 0, "p": 7500},
         55: {"h": 0, "p": 8500},
-        81: {"h": 0, "p": 6000},
-        89: {"h": 0, "p": 8500},
-        100: {"h": 0, "p": 6000},
-        105: {"h": 0, "p": 8900},
-        112: {"h": 0, "p": 6000},
-        115: {"h": 0, "p": 7000},
-        120: {"h": 0, "p": 8900},
+        112: {"h": 0, "p": 7000},
+        113: {"h": 0, "p": 8900},
         135: {"h": 0, "p": 6000},
         137: {"h": 0, "p": 8900},
     }
