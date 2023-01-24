@@ -41,7 +41,9 @@ class Samochod:
         self.s_zero = s
 
         self.f_hamowania = 0
+        self.static_f_hamowania = f_przyspieszania/17.0
         self.f_przyspieszania = f_przyspieszania
+        self.static_f_przyspieszenia = f_przyspieszania
 
         self.allow_simulate = True
 
@@ -75,33 +77,85 @@ class Samochod:
     def log(self):
         print(f"v: {self.v} ; s: {self.s} ; a: {self.a} p: {self.f_przyspieszania} ; h: {self.f_hamowania}")
 
-def generate_charts(sm1, sm2, memory_delta):
-    plt.subplot(3, 5, 1, title="1: v")
+def generate_charts_1(sm1, sm2, memory_delta):
+    plt.subplot(3, 5, 1, title="1: v (m/s)")
     plt.plot(sm1.t, sm1.v)
-    plt.subplot(3, 5, 2, title="1: s")
+    plt.subplot(3, 5, 2, title="1: s (m)")
     plt.plot(sm1.t, sm1.s)
-    plt.subplot(3, 5, 3, title="1: a")
+    plt.subplot(3, 5, 3, title="1: a (m/s^2)")
     plt.plot(sm1.t, sm1.a)
-    plt.subplot(3, 5, 4, title="1: przys")
+    plt.subplot(3, 5, 4, title="1: przys (N)")
     plt.plot(sm1.t, sm1.przys)
-    plt.subplot(3, 5, 5, title="1: ham")
+    plt.subplot(3, 5, 5, title="1: ham (N)")
     plt.plot(sm1.t, sm1.ham)
-    plt.subplot(3, 5, 6, title="2: v")
+    plt.subplot(3, 5, 6, title="2: v (m/s)")
     plt.plot(sm1.t, sm2.v)
-    plt.subplot(3, 5, 7, title="2: s")
+    plt.subplot(3, 5, 7, title="2: s (m)")
     plt.plot(sm1.t, sm2.s)
-    plt.subplot(3, 5, 8, title="2: a")
+    plt.subplot(3, 5, 8, title="2: a (m/s^2)")
     plt.plot(sm1.t, sm2.a)
-    plt.subplot(3, 5, 9, title="2: przys")
+    plt.subplot(3, 5, 9, title="2: przys (N)")
     plt.plot(sm1.t, sm2.przys)
-    plt.subplot(3, 5, 10, title="2: ham")
+    plt.subplot(3, 5, 10, title="2: ham (N)")
     plt.plot(sm1.t, sm2.ham)
-    # plt.subplot(3, 5, 10, title="2: ham")
-    # plt.plot(sm1.t, sm2.ham)
-
-    plt.subplot(3, 5, 11, title="delta s")
+    plt.subplot(3, 5, 11, title="delta s (m)")
     plt.plot(sm1.t, memory_delta)
     plt.show()
+
+
+def generate_charts_2(sm1, sm2, memory_delta):
+    plt.subplot(3, 5, 1, title="1: v (m/s)")
+    plt.plot(sm1.t, sm1.v)
+    plt.plot(sm1.t, sm2.v)
+    plt.subplot(3, 5, 2, title="1: s (m)")
+    plt.plot(sm1.t, sm1.s)
+    plt.plot(sm1.t, sm2.s)
+    plt.subplot(3, 5, 3, title="1: a (m/s^2)")
+    plt.plot(sm1.t, sm1.a)
+    plt.plot(sm1.t, sm2.a)
+    plt.subplot(3, 5, 4, title="1: przys (N)")
+    plt.plot(sm1.t, sm1.przys)
+    plt.plot(sm1.t, sm2.przys)
+    plt.subplot(3, 5, 5, title="1: ham (N)")
+    plt.plot(sm1.t, sm1.ham)
+    plt.plot(sm1.t, sm2.ham)
+    plt.subplot(3, 5, 11, title="delta s (m)")
+    plt.plot(sm1.t, memory_delta)
+    plt.show()
+
+def generate_charts_3(sm1, sm2, memory_delta):
+    plt.subplot(3, 5, 1, title="1: v (m/s)")
+    plt.plot(sm1.t, sm1.v)
+    plt.subplot(3, 5, 2, title="1: s (m)")
+    plt.plot(sm1.t, sm1.s)
+    plt.subplot(3, 5, 3, title="1: a (m/s^2)")
+    plt.plot(sm1.t, sm1.a)
+    plt.subplot(3, 5, 4, title="1: przys (N)")
+    plt.plot(sm1.t, sm1.przys, 'tab:green')
+    plt.subplot(3, 5, 5, title="1: ham (N)")
+    plt.plot(sm1.t, sm1.ham, 'tab:red')
+    plt.subplot(3, 5, 6, title="2: v (m/s)")
+    plt.plot(sm1.t, sm2.v, 'tab:orange')
+    plt.subplot(3, 5, 7, title="2: s (m)")
+    plt.plot(sm1.t, sm2.s, 'tab:orange')
+    plt.subplot(3, 5, 8, title="2: a (m/s^2)")
+    plt.plot(sm1.t, sm2.a, 'tab:orange')
+    plt.subplot(3, 5, 9, title="2: przys (N)")
+    plt.plot(sm1.t, sm2.przys, 'tab:green')
+    plt.subplot(3, 5, 10, title="2: ham (N)")
+    plt.plot(sm1.t, sm2.ham, 'tab:red')
+    plt.subplot(3, 5, 15, title="delta s (m)")
+    plt.plot(sm1.t, memory_delta, 'tab:pink')
+
+    plt.subplot(3, 5, 13, title="1,2: v (m/s)")
+    plt.plot(sm1.t, sm1.v)
+    plt.plot(sm1.t, sm2.v)
+    plt.subplot(3, 5, 14, title="1,2: s (m)")
+    plt.plot(sm1.t, sm1.s)
+    plt.plot(sm1.t, sm2.s)
+    plt.show()
+
+# def generate_charts_4(sm1, sm2, memory_delta):
 
 class SamMemory:
     def __init__(self) -> None:
@@ -144,18 +198,6 @@ class Regulator:
         self.sam_2.log()
 
 
-    @staticmethod
-    def get_new_f_przyspieszenia(sam, vmax=145):
-        start_a = sam.a
-        sam.v_value = v(sam.v_zero, sam.a, 1)
-        while v_km_h(sam.v_value) > vmax:
-            sam.f_przyspieszania = sam.f_przyspieszania/2
-            sam.a = sam.delta_a
-            sam.v_value = v(sam.v_zero, sam.a, 1)
-            stop = input("++")
-
-        return sam.f_przyspieszania
-
     def step(self, t):
         self.sam_1.v = v(self.sam_1.v_zero, self.sam_1.a, 1)
 
@@ -183,7 +225,6 @@ class Regulator:
 
         # safe
         if s(self.sam_2.s_zero, self.sam_2.v_zero, 1, self.sam_2.a) < self.sam_2.s:
-            # raise Exception([self.sam_2.a, abs(2*self.sam_2.v), self.sam_2.delta_a])
             raise Exception([self.sam_2.s_zero, self.sam_2.v_zero, 1, self.sam_2.a, s(self.sam_2.s_zero, self.sam_2.v_zero, 1, self.sam_2.a)])
 
         self.sam_2.s = s(self.sam_2.s_zero, self.sam_2.v_zero, 1, self.sam_2.a)
@@ -204,21 +245,17 @@ class Regulator:
         self.memory_2.save(self.sam_2, t)
 
         # stop = input(t)
-        multiplier = 1
         if current_ds < 0:
             input(f"ZDERZENIE {t}")
-            # raise Exception("X")
 
         # estimations
         if current_ds < 90:
 
             if self.sam_2.v != 0:
                 self.sam_2.f_przyspieszania = 0
-                print(self.memory_delta[-1])
-                print(self.memory_delta[-2])
                 if len(self.memory_delta) > 1:
                     if self.sam_2.f_hamowania == 0:
-                        self.sam_2.f_hamowania = 500
+                        self.sam_2.f_hamowania = self.sam_2.static_f_hamowania
                     
                     div_elem = self.memory_delta[-2]/(self.memory_delta[-1]**2)
                     # input(div_elem)
@@ -231,7 +268,7 @@ class Regulator:
 
         elif current_ds > 150:
             self.sam_2.f_hamowania = 0
-            self.sam_2.f_przyspieszania = 8500
+            self.sam_2.f_przyspieszania = self.sam_2.static_f_przyspieszenia
             if len(self.memory_delta) > 1:
                 if self.memory_delta[-1] > self.memory_delta[-2]:
                     if v(self.sam_2.v_zero, self.sam_2.a, 1) < 45:
@@ -240,7 +277,7 @@ class Regulator:
         else:
             self.sam_2.last_multiplier = 1.5
             self.sam_2.brake_last_multiplier = 1.5
-            self.sam_2.f_przyspieszania = 8500
+            self.sam_2.f_przyspieszania = self.sam_2.static_f_przyspieszenia
             self.sam_2.f_hamowania = 0
 
 
@@ -261,11 +298,30 @@ def main():
     s2 = 0.0
     f_2_przyspieszania = 8500
 
+    m3 = 1150.0 # -masa pojazdu
+    fi3 = 0.75 # -współczynnik tarcia
+    alpha3 = math.pi / 6 # -kąt nachylenia równi
+    A3 = 4.0 # -powierzchnia czołowa pojazdu
+    v3 = 26.5
+    s3 = 55.0
+    f_3_przyspieszania = 15000
+
+    m4 = 1100.0 # -masa pojazdu
+    fi4 = 0.75 # -współczynnik tarcia
+    alpha4= math.pi / 6 # -kąt nachylenia równi
+    A4 = 2.5 # -powierzchnia czołowa pojazdu
+    v4 = 28.0
+    s4 = 0.0
+    f_4_przyspieszania = 12100
+
     sam_1 = Samochod(m1, fi1, alpha1, A1, s1, v1, f_1_przyspieszania)
     sam_2 = Samochod(m2, fi2, alpha2, A2, s2, v2, f_2_przyspieszania)
-    r = Regulator(sam_1=sam_1, sam_2=sam_2)
+    sam_3 = Samochod(m3, fi3, alpha3, A3, s3, v3, f_3_przyspieszania)
+    sam_4 = Samochod(m4, fi4, alpha4, A4, s4, v4, f_4_przyspieszania)
+    r12 = Regulator(sam_1=sam_1, sam_2=sam_2)
+    r34 = Regulator(sam_1=sam_3, sam_2=sam_4)
 
-    events_1 = {
+    events_1_12 = {
         7: {"h": 0, "p": 6000},
         8: {"h": 0, "p": 8900},
         20: {"h": 0, "p": 6000},
@@ -277,47 +333,23 @@ def main():
         43: {"h": 0, "p": 8500},
         54: {"h": 0, "p": 7500},
         55: {"h": 0, "p": 8500},
-        81: {"h": 0, "p": 6000},
+        81: {"h": 0, "p": 7000},
         89: {"h": 0, "p": 8500},
-        100: {"h": 0, "p": 6000},
         105: {"h": 0, "p": 8900},
         112: {"h": 0, "p": 6000},
         115: {"h": 0, "p": 7000},
         120: {"h": 0, "p": 8900},
     }
-    duration_1 = 120
-
-    events_2 = {
+    duration_1_12 = 120
+    events_2_12 = {
         7: {"h": 0, "p": 6000},
         8: {"h": 0, "p": 8900},
         20: {"h": 0, "p": 6000},
         21: {"h": 0, "p": 8900},
         30: {"h": 0, "p": 6000},
     }
-    duration_2 = 45
-
-    events_3 = {
-        7: {"h": 0, "p": 6000},
-        8: {"h": 0, "p": 8900},
-        20: {"h": 0, "p": 6000},
-        21: {"h": 0, "p": 8900},
-        29: {"h": 0, "p": 6000},
-        32: {"h": 0, "p": 7500},
-        33: {"h": 0, "p": 8000},
-        41: {"h": 0, "p": 6500},
-        43: {"h": 0, "p": 8500},
-        54: {"h": 0, "p": 8000},
-        81: {"h": 0, "p": 7000},
-        89: {"h": 0, "p": 8500},
-        100: {"h": 0, "p": 7000},
-        105: {"h": 0, "p": 8900},
-        112: {"h": 0, "p": 6500},
-        115: {"h": 0, "p": 7000},
-        120: {"h": 0, "p": 8900},
-    }
-    duration_3 = 125
-
-    events_4 = {
+    duration_2_12 = 40
+    events_3_12 = {
         7: {"h": 0, "p": 6000},
         8: {"h": 0, "p": 8900},
         20: {"h": 0, "p": 6000},
@@ -328,20 +360,91 @@ def main():
         41: {"h": 0, "p": 5500},
         43: {"h": 0, "p": 8500},
     }
-    duration_4 = 50
+    duration_3_12 = 50
 
-    events = events_4
-    duration = duration_4
+    events_1_34 = {
+        7: {"h": 0, "p": 7500},
+        8: {"h": 0, "p": 15000},
+        20: {"h": 0, "p": 7500},
+        21: {"h": 0, "p": 15000},
+        29: {"h": 0, "p": 7500},
+        32: {"h": 0, "p": 7500},
+        33: {"h": 0, "p": 8000},
+        41: {"h": 0, "p": 5500},
+        43: {"h": 0, "p": 8500},
+        54: {"h": 0, "p": 7500},
+        55: {"h": 0, "p": 8500},
+        81: {"h": 0, "p": 7000},
+        89: {"h": 0, "p": 8500},
+        105: {"h": 0, "p": 15000},
+        112: {"h": 0, "p": 7500},
+        115: {"h": 0, "p": 7000},
+        120: {"h": 0, "p": 15000}
+    }
+    duration_1_34 = 120
+    events_2_34 = {
+        7: {"h": 0, "p": 7500},
+        8: {"h": 0, "p": 12500},
+        20: {"h": 0, "p": 6500},
+        21: {"h": 0, "p": 10000},
+        30: {"h": 0, "p": 7500},
+    }
+    duration_2_34 = 50
+    events_3_34 = {
+        7: {"h": 0, "p": 7500},
+        8: {"h": 0, "p": 12100},
+        12: {"h": 0, "p": 8000},
+        20: {"h": 0, "p": 7500},
+        21: {"h": 0, "p": 15000},
+        29: {"h": 0, "p": 7500},
+        32: {"h": 0, "p": 12100},
+        33: {"h": 0, "p": 9000},
+        41: {"h": 0, "p": 7000},
+        43: {"h": 0, "p": 14100},
+    }
+    duration_3_34 = 62
+
+
+    """============SYMULACJE============"""
+
+    """SAM 1, SAM 2"""
+
+    # events = events_1_12
+    # duration = duration_1_12
+    # r = r12
+
+    # events = events_2_12
+    # duration = duration_2_12
+    # r = r12
+
+    events = events_3_12
+    duration = duration_3_12
+    r = r12
+
+    """SAM 3, SAM 4"""
+
+    # events = events_1_34
+    # duration = duration_1_34
+    # r = r34
+
+    # events = events_2_34
+    # duration = duration_2_34
+    # r = r34
+
+    # events = events_3_34
+    # duration = duration_3_34
+    # r = r34
+
     for t in range(duration):
         r.step(t=t)
         r.log(t=t)
-        #stop = input(t)
         if t in events.keys():
             r.sam_1.f_hamowania = events[t]["h"]
             r.sam_1.f_przyspieszania = events[t]["p"]
 
-    generate_charts(r.memory_1, r.memory_2, r.memory_delta)
+    generate_charts_3(r.memory_1, r.memory_2, r.memory_delta)
     print(r.memory_delta)
+
 
 if __name__ == "__main__":
     main()
